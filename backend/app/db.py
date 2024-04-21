@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from app.classes import Teacher,Admin
+from .classes import Teacher,Admin
 
 
 load_dotenv()
@@ -44,13 +44,16 @@ class Database:
 
 
     def Add_Teacher(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str):        
-        query = """
-                INSERT INTO teacher (fname, lname, email, pw, bdate, phone)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """
-        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
-        self.connection.commit()
-        return
+        try:
+            query = """
+                    INSERT INTO teacher (fname, lname, email, pw, bdate, phone)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+            self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
+            self.connection.commit()
+            return True
+        except Exception as e:
+            return False
 
 
     def Get_Teachers(self):
@@ -59,7 +62,7 @@ class Database:
         as objects
         """
         query = """
-                SELECT * FROM teacher
+                SELECT * FROM teacher 
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
@@ -100,21 +103,12 @@ class Database:
         else:
             return (False, None)
             
-    
-
-
-<<<<<<< HEAD
-TEST = Database()
-
+            
+            
+        
 #TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
 #acc = TEST.Authentificate('mahdiitahiir@gmail.com', 'mahdim')[1]
 #print(acc.to_json())
 #print(TEST.Get_Teachers())
 #TEST.Delete_Teacher(3)
-#for i in range():
-#    TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
-=======
-
->>>>>>> da7ef6ab8b3c8e50495e65d764f3ff8f4e8f01a3
-
-
+#TEST.Delete_Teacher()
