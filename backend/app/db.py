@@ -103,6 +103,7 @@ class Database:
     
 
 
+<<<<<<< HEAD
 TEST = Database()
 
 #TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
@@ -112,5 +113,8 @@ TEST = Database()
 #TEST.Delete_Teacher(3)
 #for i in range():
 #    TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
+=======
+
+>>>>>>> da7ef6ab8b3c8e50495e65d764f3ff8f4e8f01a3
 
 
