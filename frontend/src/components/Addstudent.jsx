@@ -5,14 +5,20 @@ import Button from './Button'
 
 
 export default function Addstudent({open}) {
- const [name,setName]=useState("")
- const [email,setEmail]=useState("")
- const [level,setLevel]=useState("")
- const [password,setPassword]=useState("")
- const [addtype,setAddtype]=useState()
- var hidden;
- if (addtype==="manual"){hidden=false}
- else if (addtype==="csv"){hidden=true}
+  const [name,setName]=useState("")
+  const [email,setEmail]=useState("")
+  const [level,setLevel]=useState("")
+  const [password,setPassword]=useState("")
+  const [file,setFile]=useState("")
+  const [addtype,setAddtype]=useState(null)
+  var hidden;
+  if (addtype==="manual"){
+    console.log(addtype)
+    hidden=false}
+  else if (addtype==="csv"){
+    console.log(addtype)
+    hidden=true}
+  else {hidden=false}
 
 
   return (
@@ -20,22 +26,25 @@ export default function Addstudent({open}) {
       <p className='text-center ml-5 text-xl lg:text-3xl md:text-2xl w-[80%] sm:w-[60%] md:w-[40%] '>Add student</p>
       <form action="">
         <div  className='flex justify-center text-sm  md:text-md lg:text-lg gap-8 mx-6 mt-4 w-[80%] sm:w-[60%] md:w-[40%] whitespace-pre'>
-        <Radiobutton text={'Manual Add'}
-        id={'A1'}
-        name={'group'}
-        value={"manual"}
-        set={setAddtype}
-        />
-
-
-        <Radiobutton text={'Add By CSV'}
-        id={'A2'} 
-        name={'group'} 
-        value={"csv"} 
-        set={setAddtype}
-        />
+         
+         
+          <div>
+          <input checked className="hidden" type="radio"  name="group" value="manual" id="A1"  onClick={(e)=>setAddtype(e.target.value)} />
+          <label className={` rounded-full bg-secondary text-third p-3 duration-100  ${!hidden && "bg-slate-400 border-2 border-primary"} `} htmlFor="A1">Manual add</label>
           </div>
-          <div className={`relative text-center ml-5 mt-12 space-y-4 w-[80%] sm:w-[60%] md:w-[40%] duration-100 ${hidden && 'opacity-0'} `}>
+
+
+          <div>
+          <input className="hidden" type="radio"  name="group" value="csv" id="A2"  onClick={(e)=>setAddtype(e.target.value)} />
+          <label className={` rounded-full bg-secondary text-third p-3 duration-100  ${hidden && "bg-slate-400 border-2 border-primary"}  `}  htmlFor="A2">Add by CSV</label>
+          </div>
+          </div>
+          
+          
+          
+          
+          
+          <div className={`relative text-center ml-5 mt-12 space-y-4 w-[80%] sm:w-[60%] md:w-[40%] duration-100 ${hidden && 'hidden'} `}>
           <Input
             type={"text"}
             name={"name"}
@@ -75,6 +84,32 @@ export default function Addstudent({open}) {
            </div>
             </div>
            
+
+      </form>
+
+      <form>
+
+      <div className={`relative text-center ml-5 mt-12 space-y-4 w-[80%] sm:w-[60%] md:w-[40%] duration-100 ${!hidden && 'hidden'} `}>
+
+      <Input
+            type={"text"}
+            name={"level"}
+            label={"Level"}
+            state={level}
+            set={setLevel}
+          />
+      <Input
+      type={"file"}
+      name={"file"}
+      label={""}
+      state={file}
+      set={file}/>
+                  
+                  
+        <div className='pt-4 w-[60%] mx-auto'>
+           <Button text={"Submit"}  />
+          </div>
+      </div>
 
       </form>
   

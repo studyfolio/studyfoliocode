@@ -108,9 +108,9 @@ TEST = Database()
 #TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
 #acc = TEST.Authentificate('mahdiitahiir@gmail.com', 'mahdim')[1]
 #print(acc.to_json())
-print(TEST.Get_Teachers())
+#print(TEST.Get_Teachers())
 #TEST.Delete_Teacher(3)
-for i in range(100000):
-    TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
+#for i in range():
+#    TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
 
 

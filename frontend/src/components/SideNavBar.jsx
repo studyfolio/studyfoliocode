@@ -7,7 +7,7 @@ import { BiLogOut } from "react-icons/bi";
 import { Link } from 'react-router-dom';
 
 
-export default function SideNavBar({open,setOpen}) {
+export default function SideNavBar({open,setOpen,setCurrentpage}) {
 
   
   return (
@@ -19,10 +19,10 @@ export default function SideNavBar({open,setOpen}) {
 
 
       <div className='flex flex-col mt-4 gap-4 relative'>
-      <SideNavbarButton text={"Add student"} icon={IoPersonAddOutline} state={open} margin={false}   />
-      <SideNavbarButton text={"Modify student"} icon={BsPersonGear} state={open} margin={false}   />
-      <SideNavbarButton text={"Add teacher"} icon={IoPersonAddOutline} state={open} margin={true}   />
-      <SideNavbarButton text={"Modify teacher"} icon={BsPersonGear} state={open} margin={false}   />
+      <SideNavbarButton text={"Add student"} icon={IoPersonAddOutline} states={{open:open,setCurrentpage:setCurrentpage}} margin={false}   />
+      <SideNavbarButton text={"Modify student"} icon={BsPersonGear} states={{open:open,setCurrentpage:setCurrentpage}} margin={false}   />
+      <SideNavbarButton text={"Add teacher"} icon={IoPersonAddOutline} states={{open:open,setCurrentpage:setCurrentpage}} margin={true}   />
+      <SideNavbarButton text={"Modify teacher"} icon={BsPersonGear} states={{open:open,setCurrentpage:setCurrentpage}} margin={false}   />
       </div>
   
 
