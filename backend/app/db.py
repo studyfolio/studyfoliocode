@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from .classes import Teacher,Admin
+from classes import Teacher, Admin, Student, Promo, Group
 
 
 load_dotenv()
@@ -43,18 +43,24 @@ class Database:
         
 
 
-    def Add_Teacher(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str):        
-        try:
-            query = """
-                    INSERT INTO teacher (fname, lname, email, pw, bdate, phone)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """
-            self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
-            self.connection.commit()
-            return True
-        except Exception as e:
-            return False
-
+    def Add_Teacher(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str):   
+        query = """
+                SELECT pw FROM teacher 
+                where email = %s
+            """     
+        self.cursor.execute(query, [email])
+        rows = self.cursor.fetchall()
+        for row in rows:
+            if self.decrypt_data(row[0]) == password:
+                return("Already Registered")
+        query = """
+                INSERT INTO teacher (fname, lname, email, pw, bdate, phone)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
+        self.connection.commit()
+        return
+    
 
     def Get_Teachers(self):
         """
@@ -62,7 +68,7 @@ class Database:
         as objects
         """
         query = """
-                SELECT * FROM teacher 
+                SELECT * FROM teacher
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
@@ -72,6 +78,8 @@ class Database:
         """
         Deletes a teacher by his id as integer
         """
+        if id == 1:
+            return
         query = """
             DELETE FROM teacher 
             WHERE id = %s
@@ -80,7 +88,127 @@ class Database:
         self.connection.commit()
         return
     
-    def Authentificate(self, email : str, password: str):        
+    def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_promo :str, id_groupe : str):        
+        query = """
+                SELECT pw FROM student 
+                where email = %s
+            """     
+        self.cursor.execute(query, [email])
+        rows = self.cursor.fetchall()
+        for row in rows:
+            if self.decrypt_data(row[0]) == password:
+                print("Already Registered")
+                return("Already Registered")
+        query = """
+                INSERT INTO student (fname, lname, email, pw, bdate, phone, id_promo, id_groupe)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_promo, id_groupe))
+        self.connection.commit()
+        return
+    
+    def Get_Students(self):
+        """
+        returns tuple consisting of all students
+        as objects
+        """
+        query = """
+                SELECT * FROM student
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        
+        return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Promo_By_ID(row[7]), self.Get_Group_By_ID(row[8])) for row in rows)  
+    
+    def Add_Promo(self, year : str, nb_st :str, avg_sc: str, avg_m: str, avg_tm: str):        
+
+        query = """
+                INSERT INTO promo (enter_year, nb_st, avg_sc, avg_tm, avg_m)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (year, nb_st, avg_sc, avg_tm, avg_m))
+        self.connection.commit()
+        return
+    
+    def Add_Group(self, number : str, nb_st :str, id_promo : str):        
+
+        query = """
+                INSERT INTO groupe (number, nb_students, id_promo)
+                VALUES (%s, %s, %s)
+            """
+        self.cursor.execute(query, (number, nb_st, id_promo))
+        self.connection.commit()
+        return
+    
+    
+    def Get_Promos(self):
+        """
+        returns tuple consisting of all promos
+        as objects
+        """
+        query = """
+                SELECT * FROM promo
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return tuple(Promo(row[0], row[1], row[2], row[3], row[4], row[5]) for row in rows)  
+    
+    def Get_Promo_By_ID(self, id):
+        """
+        returns selected promo by id
+        """
+        query = """
+                SELECT * FROM promo WHERE id = %s
+            """
+        self.cursor.execute(query, [str(id)])
+        rows = self.cursor.fetchall()
+        for row in rows:
+            return Promo(row[0], row[1], row[2], row[3], row[4], row[5])
+        return None 
+    
+    def Get_Promo_ID_By_Year(self, year):
+        """
+        returns selected promo id by year
+        """
+        query = """
+                SELECT id FROM promo WHERE enter_year = %s
+            """
+        self.cursor.execute(query, [str(year)])
+        row = self.cursor.fetchall()
+        return(row[0][0])
+        
+     
+    def Get_Groups(self):
+        """
+        returns tuple consisting of all groups
+        as objects
+        """
+        query = """
+                SELECT * FROM groupe
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return tuple(Group(row[0], row[1], row[2], self.Get_Promo_By_ID(row[3])) for row in rows)  
+    
+    def Get_Group_By_ID(self, id):
+        """
+        returns selected promo by id
+        """
+        query = """
+                SELECT * FROM groupe WHERE id = %s
+            """
+        self.cursor.execute(query, [str(id)])
+        rows = self.cursor.fetchall()
+        for row in rows:
+            return Group(row[0], row[1], row[2], self.Get_Promo_By_ID(row[3]))
+        return None
+     
+    
+    
+
+
+    
+    def Authentificate_TA(self, email : str, password: str):        
         """
         Takes in email and password as strings and return 
         a tuple with first element being True if authentication 
@@ -92,9 +220,9 @@ class Database:
             WHERE  email = '{email}'
         """
         self.cursor.execute(query)
-        result = self.cursor.fetchall()        
-        if len(result) != 0:
-            row = result[0]        
+        result = self.cursor.fetchall()  
+        if len(result) != 0:            
+            row = result[0]                   
             Account = Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) if row[0] != 1 else Admin(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) 
             if Account.verify_pw(password):
                 return(True, Account)
@@ -102,13 +230,39 @@ class Database:
                 return(False, None)
         else:
             return (False, None)
-            
-            
-            
         
-#TEST.Add_Teacher('ali', 'youcef', 'aliyoucef599@gmail.com', 'benisaf', '2004-03-13', '0549328708')
-#acc = TEST.Authentificate('mahdiitahiir@gmail.com', 'mahdim')[1]
-#print(acc.to_json())
-#print(TEST.Get_Teachers())
-#TEST.Delete_Teacher(3)
-#TEST.Delete_Teacher()
+    def Authentificate_ST(self, email : str, password: str):        
+        """
+        Takes in email and password as strings and return 
+        a tuple with first element being True if authentication 
+        succeded else False and second element being the object 
+        Account or None if authentication failed
+        """
+        query = f"""
+            SELECT * FROM student 
+            WHERE  email = '{email}'
+        """
+        self.cursor.execute(query)
+        result = self.cursor.fetchall()        
+        if len(result) != 0:
+            row = result[0]        
+            Account = Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6])
+            if Account.verify_pw(password):
+                return(True, Account)
+            else:
+                return(False, None)
+        else:
+            return (False, None)
+        
+    
+    def Authentificate(self, email : str, password : str):
+
+        attempt = self.Authentificate_TA(email, password)
+        if not attempt[0]:
+            return self.Authentificate_ST(email, password)
+        else:
+            return attempt
+                        
+    
+
+
