@@ -265,9 +265,3 @@ class Database:
                         
     
 
-
-TEST = Database()
-#TEST.Add_Student('tahir', 'abderrahmane', 'am.tahir@esi-sba.dz', 'relizane48', '2004-10-19', '0798113634', '1')
-result = TEST.Get_Students()
-for res in result:
-    print(res.to_json())
