@@ -88,7 +88,7 @@ class Database:
         self.connection.commit()
         return
     
-    def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_promo :str, id_groupe : str):        
+    def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_groupe : str):        
         query = """
                 SELECT pw FROM student 
                 where email = %s
@@ -100,10 +100,10 @@ class Database:
                 print("Already Registered")
                 return("Already Registered")
         query = """
-                INSERT INTO student (fname, lname, email, pw, bdate, phone, id_promo, id_groupe)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO student (fname, lname, email, pw, bdate, phone, id_group)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_promo, id_groupe))
+        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_groupe))
         self.connection.commit()
         return
     
@@ -118,25 +118,25 @@ class Database:
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         
-        return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Promo_By_ID(row[7]), self.Get_Group_By_ID(row[8])) for row in rows)  
+        return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7])) for row in rows)  
     
-    def Add_Promo(self, year : str, nb_st :str, avg_sc: str, avg_m: str, avg_tm: str):        
+    def Add_Promo(self, name :str, year : str):        
 
         query = """
-                INSERT INTO promo (enter_year, nb_st, avg_sc, avg_tm, avg_m)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO promo (promo_name, promo_year)
+                VALUES (%s, %s)
             """
-        self.cursor.execute(query, (year, nb_st, avg_sc, avg_tm, avg_m))
+        self.cursor.execute(query, (name, year))
         self.connection.commit()
-        return
+        return (self.Get_Promo_By_ID(self.Get_Promo_ID_By_Year(year)))
     
-    def Add_Group(self, number : str, nb_st :str, id_promo : str):        
+    def Add_Group(self, number : str, id_promo : str):        
 
         query = """
-                INSERT INTO groupe (number, nb_students, id_promo)
-                VALUES (%s, %s, %s)
+                INSERT INTO groupe (group_number, id_promo)
+                VALUES (%s, %s)
             """
-        self.cursor.execute(query, (number, nb_st, id_promo))
+        self.cursor.execute(query, (number, id_promo))
         self.connection.commit()
         return
     
@@ -151,19 +151,19 @@ class Database:
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return tuple(Promo(row[0], row[1], row[2], row[3], row[4], row[5]) for row in rows)  
+        return tuple(Promo(row[0], row[1], row[2]) for row in rows)  
     
     def Get_Promo_By_ID(self, id):
         """
         returns selected promo by id
         """
         query = """
-                SELECT * FROM promo WHERE id = %s
+                SELECT * FROM promo WHERE id_promo = %s
             """
         self.cursor.execute(query, [str(id)])
         rows = self.cursor.fetchall()
         for row in rows:
-            return Promo(row[0], row[1], row[2], row[3], row[4], row[5])
+            return Promo(row[0], row[1], row[2])
         return None 
     
     def Get_Promo_ID_By_Year(self, year):
@@ -171,7 +171,7 @@ class Database:
         returns selected promo id by year
         """
         query = """
-                SELECT id FROM promo WHERE enter_year = %s
+                SELECT id FROM promo WHERE promo_year = %s
             """
         self.cursor.execute(query, [str(year)])
         row = self.cursor.fetchall()
@@ -188,19 +188,19 @@ class Database:
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return tuple(Group(row[0], row[1], row[2], self.Get_Promo_By_ID(row[3])) for row in rows)  
+        return tuple(Group(row[0], row[1], self.Get_Promo_By_ID(row[2])) for row in rows)  
     
     def Get_Group_By_ID(self, id):
         """
         returns selected promo by id
         """
         query = """
-                SELECT * FROM groupe WHERE id = %s
+                SELECT * FROM groupe WHERE id_group = %s
             """
         self.cursor.execute(query, [str(id)])
         rows = self.cursor.fetchall()
         for row in rows:
-            return Group(row[0], row[1], row[2], self.Get_Promo_By_ID(row[3]))
+            return Group(row[0], row[1], self.Get_Promo_By_ID(row[2]))
         return None
      
     
@@ -246,7 +246,7 @@ class Database:
         result = self.cursor.fetchall()        
         if len(result) != 0:
             row = result[0]        
-            Account = Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6])
+            Account = Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))
             if Account.verify_pw(password):
                 return(True, Account)
             else:
@@ -266,3 +266,8 @@ class Database:
     
 
 
+TEST = Database()
+#TEST.Add_Student('tahir', 'abderrahmane', 'am.tahir@esi-sba.dz', 'relizane48', '2004-10-19', '0798113634', '1')
+result = TEST.Get_Students()
+for res in result:
+    print(res.to_json())

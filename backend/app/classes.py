@@ -53,45 +53,39 @@ class Admin(Account):
 
 class Group:
 
-    def __init__(self, id, number, nb_st, promo = None):
+    def __init__(self, id, number, promo):
         self.id = id
         self.number = number
-        self.nb_students = nb_st
         self.promo = promo
 
     def to_json(self):
         return {
+            'id' : self.id,
             'number' : self.number,
-            'nb_students' : self.nb_students,
             'promo' : self.promo.to_json()
         }
     
 class Promo:
 
-    def __init__(self, id, year, nb_st, avg_sc, avg_m, avg_tm):
+    def __init__(self, id, name, year):
         self.id = id
-        self.year = year
-        self.nb_students = nb_st
-        self.avg_sc = avg_sc
-        self.avg_tm = avg_tm
-        self.avg_m = avg_m
+        self.name = name
+        self.year = year       
 
 
     def to_json(self):
         return{
+            'id' : self.id,
+            'name' : self.name,
             'year': self.year,
-            'nb_students' : self.nb_students,
-            'avg_sc' : self.avg_sc,
-            'avg_tm' : self.avg_tm,
-            'avg_m' : self.avg_m
+            
         }
     
 
 class Student(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, promo = None, group = None):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, group = None):
         super().__init__(id, fname, lname, email, pw, bdate, phone)
-        self.promo = promo
         self.group = group
 
     def __repr__(self) -> str:
@@ -106,7 +100,6 @@ class Student(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone, 
-            'promo' : self.promo.to_json(),
             'group' : self.group.to_json()
         }
 
