@@ -100,11 +100,16 @@ class Database:
         """
         teachers.remove('1') if '1' in teachers else None
         placeholder = ', '.join(['%s'] * len(teachers))
-        query = f"""
+        query1 = f"""
+            DELETE FROM role 
+            WHERE id_teacher IN ({placeholder})
+        """
+        query2 = f"""
             DELETE FROM teacher 
             WHERE id IN ({placeholder})
         """
-        self.cursor.execute(query, tuple(teachers))
+        self.cursor.execute(query1, tuple(teachers))
+        self.cursor.execute(query2, tuple(teachers))
         self.connection.commit()
         return
     
@@ -387,3 +392,6 @@ class Database:
             return attempt
                         
 
+TEST = Database()
+
+TEST.Delete_Teachers(['21'])
