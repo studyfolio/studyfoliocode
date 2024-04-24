@@ -387,7 +387,3 @@ class Database:
             return attempt
                         
 
-TEST = Database()
-
-res = TEST.Get_Teacher_Roles('20')
-print(res[0].to_json())
