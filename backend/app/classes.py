@@ -100,9 +100,41 @@ class Student(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone, 
-            'group' : self.group.to_json()
+            'group' : None if self.group is None else self.group.to_json()
         }
-
     
-    
+class Module:
 
+    def __init__(self, id, name, acronym, description, coefficient, img_link):
+        self.id = id
+        self.name = name
+        self.acronym = acronym
+        self.description = description
+        self.coefficient = coefficient
+        self.img_link = img_link
+
+    def to_json(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'acronym' : self.acronym,
+            'description' : self.description,
+            'coefficient' : self.coefficient,
+            'image_link' : self.img_link
+        }
+    
+class Assignement:
+    def __init__(self, teacher, module, type_charge, permission):
+        self.teacher = teacher
+        self.module = module
+        self.type_charge = type_charge
+        self.permission = permission
+
+    def to_json(self):
+        return {
+            'teacher' : self.teacher.to_json(),
+            'module' : self.module.to_json(),
+            'type_charge' : self.type_charge,
+            'permission' : self.permission
+        }
+    
