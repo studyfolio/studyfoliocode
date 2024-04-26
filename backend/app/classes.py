@@ -138,3 +138,47 @@ class Assignement:
             'permission' : self.permission
         }
     
+class Studying:
+    def __init__(self, promo, module, shown, semester):
+        self.promo = promo
+        self.module = module
+        self.shown = shown
+        self.semester = semester
+
+    def to_json(self):
+        return {
+            'promo' : self.promo.to_json(),
+            'module' : self.module.to_json(),
+            'shown' : self.shown,
+            'semester' : self.semester
+        }
+
+class Section:
+    def __init__(self, id, name, module):
+        self.id = id
+        self.name = name
+        self.module = module
+
+    def to_json(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'module' : self.module.to_json()
+        }
+    
+class Ressource:
+    def __init__(self, id, name, id_teacher, id_section, extension):
+        self.id = id
+        self.name = name
+        self.id_teacher = id_teacher
+        self.id_section = id_section
+        self.extension = extension
+
+    def to_json(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'extension' : self.extension,
+            'teacher' : self.id_teacher.to_json(),
+            'section' : self.id_section.to_json()
+        }
