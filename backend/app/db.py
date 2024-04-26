@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from classes import *
+from .classes import *
 
 
 load_dotenv()
@@ -321,6 +321,9 @@ class Database:
 
 
     def Get_Teacher_Roles(self, id_teacher: str):
+        """
+        Returns a tuple containing all roles for a given teacher
+        """
         query = """
                 SELECT * FROM role
                 WHERE id_teacher = %s
@@ -328,8 +331,116 @@ class Database:
         self.cursor.execute(query, [id_teacher])
         rows = self.cursor.fetchall()
         return(tuple(Assignement(self.Get_Teacher_By_ID(row[0]), self.Get_Module_By_ID(row[1]), row[2], row[3]) for row in rows))
+    
+
+    def Get_Roles_By_Module(self, id_module : str):   
+        """
+        Returns a tuple containing all roles for a given module
+        """     
+        query = """
+                SELECT * FROM role
+                WHERE id_module = %s
+            """
+        self.cursor.execute(query, [id_module])
+        rows = self.cursor.fetchall()
+        return(tuple(Assignement(self.Get_Teacher_By_ID(row[0]), self.Get_Module_By_ID(row[1]), row[2], row[3]) for row in rows))
+     
+        
+    
+    def Add_Study_Link(self, id_promo : str, id_module : str, shown : str, semester : str):  
+        """
+        Adds a module to a promo with shown taking '0' or '1' and semenster 
+        being either '1' or '2'
+        """      
+        query = """
+                INSERT INTO study (id_promo, id_module, shown, semester)
+                VALUES (%s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (id_promo, id_module, shown, semester))
+        self.connection.commit()
+
+    def Remove_Study_Link(self, id_promo : str, modules : list):
+        placeholder = ','.join(['%s'] * len(modules))
+        query = f"""
+            DELETE FROM study 
+            WHERE id_promo = %s AND id_module IN ({placeholder})
+            """
+        self.cursor.execute(query, (id_promo, *modules))
+        self.connection.commit()
+
+    def Get_Promo_Modules(self, id_promo):
+        query = """
+                SELECT * FROM study
+                WHERE id_promo = %s
+            """
+        self.cursor.execute(query, [id_promo])
+        rows = self.cursor.fetchall()
+        return(tuple(Studying(self.Get_Promo_By_ID(row[1]), self.Get_Module_By_ID(row[0]), row[2], row[3]) for row in rows))
+    
+
+    def Add_Section(self, name : str, id_module : str):
+        query = """
+            INSERT INTO section (name, id_module)
+            VALUES (%s, %s)
+        """
+        self.cursor.execute(query, (name, id_module))
+        self.connection.commit()
+
+    def Remove_Sections(self, sections : list):
+        placeholder = ','.join(['%s'] * len(sections))
+        query = f"""
+            DELETE FROM section 
+            WHERE id IN ({placeholder})
+            """
+        self.cursor.execute(query, tuple(sections))
+        self.connection.commit()
 
     
+    def Get_Module_Sections(self, id_module):
+        query = """
+            SELECT * FROM section
+            WHERE id_module = %s
+        """
+        self.cursor.execute(query, [id_module])
+        rows = self.cursor.fetchall()
+        return(tuple(Section(row[0], row[1], self.Get_Module_By_ID(row[2])) for row in rows))
+    
+    def Get_Section_By_ID(self, id_section):
+        query = """
+            SELECT * FROM section
+            WHERE id = %s
+        """
+        self.cursor.execute(query, [id_section])
+        rows = self.cursor.fetchall()
+        return(tuple(Section(row[0], row[1], self.Get_Module_By_ID(row[2])) for row in rows)[0])
+    
+    
+
+    def Add_Ressource(self, name : str, extension : str, id_teacher : str, id_section : str):
+        query = """
+            INSERT INTO ressource (name, extension, id_teacher, id_section)
+            VALUES (%s, %s, %s, %s)
+        """
+        self.cursor.execute(query, (name, extension, id_teacher, id_section))
+        self.connection.commit()
+
+    def Delete_Ressource(self, ressources : list):
+        placeholder = ','.join(['%s'] * len(ressources))
+        query = f"""
+            DELETE FROM ressource 
+            WHERE id  IN ({placeholder})
+            """
+        self.cursor.execute(query, tuple(ressources))
+        self.connection.commit()
+
+    def Get_Ressources_By_Section(self, id_section):
+        query = """
+            SELECT * FROM ressource
+            WHERE id_section = %s
+            """
+        self.cursor.execute(query, [id_section])
+        rows = self.cursor.fetchall()
+        return (tuple(Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1]) for row in rows))
 
     
     
@@ -392,6 +503,3 @@ class Database:
             return attempt
                         
 
-TEST = Database()
-
-TEST.Delete_Teachers(['21'])
