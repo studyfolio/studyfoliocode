@@ -3,7 +3,8 @@ from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
 from .classes import *
-
+import secrets
+import string
 
 load_dotenv()
 
@@ -47,6 +48,10 @@ class Database:
 
     def decrypt_data(self, edata :str):
         return self.cipher_suite.decrypt(edata).decode()
+    
+    def Generate_ID(self):
+        numeric_id = ''.join(secrets.choice(string.digits) for _ in range(10))
+        return numeric_id
         
 
 
@@ -344,6 +349,19 @@ class Database:
         self.cursor.execute(query, [id_module])
         rows = self.cursor.fetchall()
         return(tuple(Assignement(self.Get_Teacher_By_ID(row[0]), self.Get_Module_By_ID(row[1]), row[2], row[3]) for row in rows))
+    
+    def Get_Roles(self):   
+        """
+        Returns a tuple containing all roles for all modules
+        """     
+        query = """
+                SELECT * FROM role                
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return(tuple(Assignement(self.Get_Teacher_By_ID(row[0]), self.Get_Module_By_ID(row[1]), row[2], row[3]) for row in rows))
+    
+
      
         
     
@@ -358,6 +376,28 @@ class Database:
             """
         self.cursor.execute(query, (id_promo, id_module, shown, semester))
         self.connection.commit()
+
+    def Show_Module(self, id_module : str, id_promo : str):
+        """
+        Makes a module visible for a promo
+        """
+        query = """
+            UPDATE study SET shown = 1
+            WHERE id_promo = %s AND id_module = %s
+            """
+        self.cursor.execute(query, (id_promo, id_module))
+        self.connection.commit()
+
+    def Hide_Module(self, id_module : str, id_promo : str):
+        """
+        Makes a module non visible for a promo
+        """
+        query = """
+            UPDATE study SET shown = 0
+            WHERE id_promo = %s AND id_module = %s
+            """
+        self.cursor.execute(query, (id_promo, id_module))
+        self.connection.commit()        
 
     def Remove_Study_Link(self, id_promo : str, modules : list):
         placeholder = ','.join(['%s'] * len(modules))
@@ -416,12 +456,12 @@ class Database:
     
     
 
-    def Add_Ressource(self, name : str, extension : str, id_teacher : str, id_section : str):
+    def Add_Ressource(self, id : str, name : str, extension : str, id_teacher : str, id_section : str):       
         query = """
-            INSERT INTO ressource (name, extension, id_teacher, id_section)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO ressource (id, name, extension, id_teacher, id_section)
+            VALUES (%s, %s, %s, %s, %s)
         """
-        self.cursor.execute(query, (name, extension, id_teacher, id_section))
+        self.cursor.execute(query, (id, name, extension, id_teacher, id_section))
         self.connection.commit()
 
     def Delete_Ressource(self, ressources : list):
@@ -502,4 +542,3 @@ class Database:
         else:
             return attempt
                         
-
