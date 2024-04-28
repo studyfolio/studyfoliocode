@@ -31,6 +31,9 @@ class Teacher(Account):
             'phone' : self.phone,            
         }
 
+    def complete_json(self, roles):
+        return list((role.to_json() for role in roles))
+    
 class Admin(Account):
 
     def __init__(self, id, fname, lname, email, pw, bdate, phone):
