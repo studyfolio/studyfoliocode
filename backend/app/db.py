@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from .classes import *
+from classes import *
 import secrets
 import string
 
@@ -71,7 +71,9 @@ class Database:
             """
         self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
         self.connection.commit()
-        return 
+        self.cursor.execute("SELECT * FROM teacher WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6])
         
     
 
@@ -134,7 +136,9 @@ class Database:
                 """
         self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_groupe))
         self.connection.commit()
-        return        
+        self.cursor.execute("SELECT * FROM student WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))       
 
     def Modify_Group(self, students : list, new_group : str):
         """
@@ -183,7 +187,9 @@ class Database:
             """
         self.cursor.execute(query, (name, year))
         self.connection.commit()
-        return self.Get_Promo_By_ID(self.Get_Promo_ID_By_Year(year)).id
+        self.cursor.execute("SELECT * FROM promo WHERE id_promo = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Promo(row[0], row[1], row[2])
     
     def Add_Group(self, number : str, id_promo : str):        
 
@@ -193,7 +199,9 @@ class Database:
             """
         self.cursor.execute(query, (number, id_promo))
         self.connection.commit()
-        return
+        self.cursor.execute("SELECT * FROM groupe WHERE id_group = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Group(row[0], row[1], self.Get_Promo_By_ID(row[2]))
     
     
     def Get_Promos(self):
@@ -292,6 +300,9 @@ class Database:
         
         self.cursor.execute(query, (name, acronym, description, coefficient, img_link))
         self.connection.commit()
+        self.cursor.execute("SELECT * FROM module WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Module(row[0], row[1],row[2], row[3], row[4], row[5])
 
     def Load_Modules(self):
         query = """
@@ -323,6 +334,7 @@ class Database:
             """
         self.cursor.execute(query, (id_teacher, id_module, type_charge, permission))
         self.connection.commit()
+        return
 
 
     def Get_Teacher_Roles(self, id_teacher: str):
@@ -362,6 +374,15 @@ class Database:
         return(tuple(Assignement(self.Get_Teacher_By_ID(row[0]), self.Get_Module_By_ID(row[1]), row[2], row[3]) for row in rows))
     
 
+    def Delete_Role(self, id_teacher : str, id_module : str, charge : str):
+        query = """
+            DELETE FROM role 
+            WHERE id_teacher = %s AND id_module = %s AND type_charge = %s
+            """
+        self.cursor.execute(query, (id_teacher, id_module, charge))
+        self.connection.commit()
+        return
+
      
         
     
@@ -376,6 +397,7 @@ class Database:
             """
         self.cursor.execute(query, (id_promo, id_module, shown, semester))
         self.connection.commit()
+        return
 
     def Show_Module(self, id_module : str, id_promo : str):
         """
@@ -416,7 +438,15 @@ class Database:
         self.cursor.execute(query, [id_promo])
         rows = self.cursor.fetchall()
         return(tuple(Studying(self.Get_Promo_By_ID(row[1]), self.Get_Module_By_ID(row[0]), row[2], row[3]) for row in rows))
-    
+
+    def Get_Studies(self):
+        query = """
+                SELECT * FROM study
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return(tuple(Studying(self.Get_Promo_By_ID(row[1]), self.Get_Module_By_ID(row[0]), row[2], row[3]) for row in rows))
+        
 
     def Add_Section(self, name : str, id_module : str):
         query = """
@@ -425,6 +455,10 @@ class Database:
         """
         self.cursor.execute(query, (name, id_module))
         self.connection.commit()
+        self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Section(row[0], row[1], self.Get_Module_By_ID(row[2]))
+
 
     def Remove_Sections(self, sections : list):
         placeholder = ','.join(['%s'] * len(sections))
@@ -434,6 +468,7 @@ class Database:
             """
         self.cursor.execute(query, tuple(sections))
         self.connection.commit()
+        return
 
     
     def Get_Module_Sections(self, id_module):
@@ -463,6 +498,10 @@ class Database:
         """
         self.cursor.execute(query, (id, name, extension, id_teacher, id_section))
         self.connection.commit()
+        self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1])
+
 
     def Delete_Ressource(self, ressources : list):
         placeholder = ','.join(['%s'] * len(ressources))
@@ -472,6 +511,7 @@ class Database:
             """
         self.cursor.execute(query, tuple(ressources))
         self.connection.commit()
+        return
 
     def Get_Ressources_By_Section(self, id_section):
         query = """
@@ -542,3 +582,7 @@ class Database:
         else:
             return attempt
                         
+
+
+TEST = Database()
+print()
