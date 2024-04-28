@@ -620,4 +620,5 @@ class Database:
             return attempt
                         
 
-
+TEST = Database()
+TEST.Add_Ressource(TEST.Generate_ID(), 'TD1', 'pdf', '20', '3')
