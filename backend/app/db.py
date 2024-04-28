@@ -320,6 +320,15 @@ class Database:
         self.cursor.execute(query, [id_module])
         row = self.cursor.fetchall()[0]
         return Module(row[0], row[1],row[2], row[3], row[4], row[5])
+    
+    def Delete_Module(self, id_module : str):
+        query = """
+                DELETE FROM module 
+                WHERE id = %s
+            """
+        self.cursor.execute(query, [id_module])
+        self.connection.commit()
+        return
 
 
     def Assign(self, id_teacher :str, id_module :str, type_charge :str, permission : str):
@@ -544,7 +553,10 @@ class Database:
             row = result[0]                   
             Account = Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) if row[0] != 1 else Admin(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) 
             if Account.verify_pw(password):
-                return(True, Account)
+                if Account.id == 1:
+                    return(True, Account)
+                else:
+                    return(True, Account, Account.complete_json(self.Get_Teacher_Roles(Account.id)))
             else:
                 return(False, None)
         else:
@@ -585,4 +597,3 @@ class Database:
 
 
 TEST = Database()
-print()
