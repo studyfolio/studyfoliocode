@@ -151,6 +151,7 @@ class Database:
         """                
         self.cursor.execute(query, (new_group, *students))
         self.connection.commit()
+        return(self.Get_Students)
 
     def Delete_Students(self, students : list):
         """
@@ -322,11 +323,30 @@ class Database:
         return Module(row[0], row[1],row[2], row[3], row[4], row[5])
     
     def Delete_Module(self, id_module : str):
-        query = """
+        query1 = """
+                DELETE FROM role 
+                WHERE id_module = %s
+            """
+        query2 = """
+                DELETE FROM study 
+                WHERE id_module = %s
+            """
+        query3 = """
+                DELETE FROM ressource                 
+                WHERE id_section IN 
+                    ( SELECT id FROM section
+                        WHERE id_module = %s 
+                        )   
+            """
+        query4 = """
+                DELETE FROM section 
+                WHERE id_module = %s
+            """
+        query4 = """
                 DELETE FROM module 
                 WHERE id = %s
             """
-        self.cursor.execute(query, [id_module])
+        self.cursor.execute(query1, [id_module])
         self.connection.commit()
         return
 
@@ -406,7 +426,10 @@ class Database:
             """
         self.cursor.execute(query, (id_promo, id_module, shown, semester))
         self.connection.commit()
-        return
+        self.cursor.execute("SELECT * FROM study WHERE id_module = %s AND id_promo = %s", (id_module, id_promo))
+        row = self.cursor.fetchone()
+        return Studying(self.Get_Promo_By_ID(row[1]), self.Get_Module_By_ID(row[0]), row[2], row[3])
+    
 
     def Show_Module(self, id_module : str, id_promo : str):
         """
@@ -418,6 +441,7 @@ class Database:
             """
         self.cursor.execute(query, (id_promo, id_module))
         self.connection.commit()
+        return (self.Get_Studies())
 
     def Hide_Module(self, id_module : str, id_promo : str):
         """
@@ -428,7 +452,8 @@ class Database:
             WHERE id_promo = %s AND id_module = %s
             """
         self.cursor.execute(query, (id_promo, id_module))
-        self.connection.commit()        
+        self.connection.commit()     
+        return (self.Get_Studies())   
 
     def Remove_Study_Link(self, id_promo : str, modules : list):
         placeholder = ','.join(['%s'] * len(modules))
@@ -596,4 +621,3 @@ class Database:
                         
 
 
-TEST = Database()
