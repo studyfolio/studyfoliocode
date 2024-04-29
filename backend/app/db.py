@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from .classes import *
+from classes import *
 import secrets
 import string
 
@@ -112,11 +112,16 @@ class Database:
             WHERE id_teacher IN ({placeholder})
         """
         query2 = f"""
+            DELETE FROM ressource
+            WHERE id_teacher IN ({placeholder})
+        """
+        query3 = f"""
             DELETE FROM teacher 
             WHERE id IN ({placeholder})
         """
         self.cursor.execute(query1, tuple(teachers))
         self.cursor.execute(query2, tuple(teachers))
+        self.cursor.execute(query3, tuple(teachers))
         self.connection.commit()
         return
     
@@ -151,7 +156,7 @@ class Database:
         """                
         self.cursor.execute(query, (new_group, *students))
         self.connection.commit()
-        return(self.Get_Students)
+        return self.Get_Students
 
     def Delete_Students(self, students : list):
         """
@@ -159,11 +164,16 @@ class Database:
         """
         students.remove('1') if '1' in students else None
         placeholder = ', '.join(['%s'] * len(students))
-        query = f"""
+        query1 = f"""
+            DELETE FROM notation 
+            WHERE id IN ({placeholder})
+        """
+        query2 = f"""
             DELETE FROM student 
             WHERE id IN ({placeholder})
         """
-        self.cursor.execute(query, tuple(students))
+        self.cursor.execute(query1, tuple(students))
+        self.cursor.execute(query2, tuple(students))
         self.connection.commit()
         return
     
@@ -261,22 +271,26 @@ class Database:
                     SELECT id_group from groupe
                         WHERE id_promo = %s
                 )                
-            """
+            """        
         query2 = """
                 DELETE from groupe
                 WHERE id_promo = %s
             """
         query3 = """
+                DELETE from study
+                WHERE id_promo = %s
+            """
+        query4 = """
                 DELETE from promo 
                 WHERE id_promo = %s
             """
         
         self.cursor.execute(query1, [id_promo])
-        print('1')        
         self.cursor.execute(query2, [id_promo])
-        print('2')
         self.cursor.execute(query3, [id_promo])
+        self.cursor.execute(query4, [id_promo])
         self.connection.commit()
+
         
      
     def Get_Groups(self):
@@ -351,14 +365,39 @@ class Database:
                         )   
             """
         query4 = """
+                DELETE FROM notation                 
+                WHERE id_activity IN 
+                    ( SELECT id FROM activity
+                        WHERE id_section IN
+                         (
+                            SELECT id FROM section
+                            WHERE id_module = %s
+                         ) 
+                        )   
+            """
+        query5 = """
+                DELETE FROM activity                 
+                WHERE id_section IN 
+                    ( SELECT id FROM section
+                        WHERE id_module = %s 
+                        )   
+            """
+        query6 = """
                 DELETE FROM section 
                 WHERE id_module = %s
             """
-        query4 = """
+        query7 = """
                 DELETE FROM module 
                 WHERE id = %s
             """
         self.cursor.execute(query1, [id_module])
+        self.cursor.execute(query2, [id_module])
+        self.cursor.execute(query3, [id_module])
+        self.cursor.execute(query4, [id_module])
+        self.cursor.execute(query5, [id_module])
+        self.cursor.execute(query6, [id_module])
+        self.cursor.execute(query7, [id_module])
+
         self.connection.commit()
         return
 
@@ -471,7 +510,7 @@ class Database:
         placeholder = ','.join(['%s'] * len(modules))
         query = f"""
             DELETE FROM study 
-            WHERE id_promo = %s AND id_module IN ({placeholder})
+            WHERE id_promo = {'%s'} AND id_module IN ({placeholder})
             """
         self.cursor.execute(query, (id_promo, *modules))
         self.connection.commit()
@@ -508,11 +547,30 @@ class Database:
 
     def Remove_Sections(self, sections : list):
         placeholder = ','.join(['%s'] * len(sections))
-        query = f"""
+        query1 = f"""
+            DELETE FROM ressource 
+            WHERE id_section IN ({placeholder})
+            """
+        query2 = f"""
+            DELETE FROM notation 
+            WHERE id_activity IN
+             (
+                SELECT id FROM activity
+                WHERE id_section IN ({placeholder})
+             ) 
+            """
+        query3 = f"""
+            DELETE FROM activity 
+            WHERE id_section IN ({placeholder})
+            """
+        query4 = f"""
             DELETE FROM section 
             WHERE id IN ({placeholder})
             """
-        self.cursor.execute(query, tuple(sections))
+        self.cursor.execute(query1, tuple(sections))
+        self.cursor.execute(query2, tuple(sections))
+        self.cursor.execute(query3, tuple(sections))
+        self.cursor.execute(query4, tuple(sections))    
         self.connection.commit()
         return
 
@@ -609,11 +667,16 @@ class Database:
         return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])) for row in rows))
     
     def Delete_Activity(self, id_activity : str):
-        query = """
+        query1 = """
+            DELETE FROM notation 
+            WHERE id_activity = %s
+            """
+        query2 = """
             DELETE FROM activity 
             WHERE id = %s
             """
-        self.cursor.execute(query, [id_activity])
+        self.cursor.execute(query1, [id_activity])
+        self.cursor.execute(query2, [id_activity])
         self.connection.commit()
 
     def Give_Notation(self, id_student : str, id_activity : str, mark : str, observation : str):
