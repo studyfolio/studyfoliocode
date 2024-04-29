@@ -170,8 +170,10 @@ class Section:
         }
     
 class Ressource:
-    def __init__(self, id, name, id_teacher, id_section, extension):
+    def __init__(self, id, name, type, extension, drive_link, id_teacher, id_section):
         self.id = id
+        self.type = type
+        self.drive_link = drive_link
         self.name = name
         self.id_teacher = id_teacher
         self.id_section = id_section
@@ -182,6 +184,42 @@ class Ressource:
             'id' : self.id,
             'name' : self.name,
             'extension' : self.extension,
+            'type' : self.type,
+            'drive_link' : self.drive_link,
             'teacher' : self.id_teacher.to_json(),
             'section' : self.id_section.to_json()
+        }
+    
+class Activity:
+    def __init__(self, id, name, description, type, drive_link, section):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.type = type
+        self.drive_link = drive_link
+        self.section = section
+
+    def to_json(self):
+        return{
+            'id' : self.id,
+            'name' : self.name,
+            'description' : self.description,
+            'type' : self.type,
+            'drive_link' : self.drive_link,
+            'section' : self.section.to_json()
+        }
+    
+class Notation:
+    def __init__(self, mark, observation, student, activity):
+        self.mark = mark
+        self.observation = observation
+        self.student = student
+        self.activity = activity
+
+    def to_json(self):
+        return{
+            'mark' : self.mark,
+            'observation' : self.observation,
+            'student' : self.student.to_json(),
+            'activity' : self.activity.to_json()
         }

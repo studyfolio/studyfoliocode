@@ -13,24 +13,31 @@ def authenticate():
     creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return creds
 
-def upload_file(file, name : str, Folder : str):
-    
+def upload_file(file, name: str, folder):
     creds = authenticate()
     service = build('drive', 'v3', credentials=creds)
 
     file_metadata = {
         'name': name,
-        'parents': [Folder]
+        'parents': [folder]
     }
     media_body = MediaIoBaseUpload(io.BytesIO(file.read()), mimetype='application/pdf', resumable=True)
-    file = service.files().create(
+    uploaded_file = service.files().create(
         body=file_metadata,
-        media_body=media_body
+        media_body=media_body,
+        fields='webViewLink, id'
     ).execute()
 
+    file_id = uploaded_file.get('id')
+    webViewLink = uploaded_file.get('webViewLink')
+    
+    return webViewLink
+
+
 def upload_image(file, name : str):
-    upload_file(file, name, "1_I9uUqXfsUz4d1G5gUBLpXcTIB4UX5p8")
+    return upload_file(file, name, "1_I9uUqXfsUz4d1G5gUBLpXcTIB4UX5p8")
 
 def upload_ressource(file, name : str):
-    upload_file(file, name, "1YbY2WkCgfvOltgIdmwiRwN_v-oGBfagP")
+    return upload_file(file, name, "1YbY2WkCgfvOltgIdmwiRwN_v-oGBfagP")
+
 

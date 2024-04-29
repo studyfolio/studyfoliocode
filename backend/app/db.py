@@ -180,6 +180,18 @@ class Database:
         
         return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7])) for row in rows)  
     
+
+    def Get_Student_By_ID(self, id_student : str):        
+        query = """
+                SELECT * FROM student
+                WHERE id = %s
+            """
+        self.cursor.execute(query, [id_student])
+        row = self.cursor.fetchone()
+        
+        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))
+    
+    
     def Add_Promo(self, name :str, year : str):        
 
         query = """
@@ -525,16 +537,17 @@ class Database:
     
     
 
-    def Add_Ressource(self, id : str, name : str, extension : str, id_teacher : str, id_section : str):       
+    def Add_Ressource(self,name : str, extension : str, type : str, drive_link : str, id_teacher : str, id_section : str):       
         query = """
-            INSERT INTO ressource (id, name, extension, id_teacher, id_section)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO ressource (name, extension, type, drive_link, id_teacher, id_section)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        self.cursor.execute(query, (id, name, extension, id_teacher, id_section))
+        self.cursor.execute(query, (name, extension, type, drive_link, id_teacher, id_section))
         self.connection.commit()
         self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
-        return Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1])
+        return Ressource(row[0], row[1], row[2], row[3], row[4], self.Get_Teacher_By_ID(row[5]), self.Get_Section_By_ID(row[6]))
+    
 
 
     def Delete_Ressource(self, ressources : list):
@@ -556,7 +569,92 @@ class Database:
         rows = self.cursor.fetchall()
         return (tuple(Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1]) for row in rows))
 
+    def Add_Activity(self,name : str, description : str, type : str, drive_link : str, id_section : str):       
+        query = """
+            INSERT INTO activity (name, description, type, drive_link, id_section)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        self.cursor.execute(query, (name, description, type, drive_link, id_section))
+        self.connection.commit()
+        self.cursor.execute("SELECT * FROM activity WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return  Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]))
     
+
+    def Get_Activities(self):
+        query = """
+            SELECT * FROM activity            
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])) for row in rows))
+    
+    def Get_Activity_By_ID(self, id_activity : str):
+        query = """
+            SELECT * FROM activity            
+            WHERE id = %s
+            """
+        self.cursor.execute(query, [id_activity])
+        row = self.cursor.fetchone()
+        return(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])))
+    
+
+    def Get_Section_Activities(self, id_section : str):
+        query = """
+            SELECT * FROM activity   
+            WHERE id_section = %s         
+            """
+        self.cursor.execute(query, [id_section])
+        rows = self.cursor.fetchall()
+        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])) for row in rows))
+    
+    def Delete_Activity(self, id_activity : str):
+        query = """
+            DELETE FROM activity 
+            WHERE id = %s
+            """
+        self.cursor.execute(query, [id_activity])
+        self.connection.commit()
+
+    def Give_Notation(self, id_student : str, id_activity : str, mark : str, observation : str):
+        query = """
+            INSERT INTO notation (mark, observation, id_student, id_activity)
+            VALUES (%s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (mark, observation, id_student, id_activity))
+        self.connection.commit()
+        self.cursor.execute("SELECT * FROM notation WHERE id_student = %s AND id_activity = %s", (id_student, id_activity))
+        row = self.cursor.fetchone()
+        return Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3]))
+    
+
+    def Delete_Notaion(self, id_student : str, id_activity : str):
+        query = """"
+            DELETE FROM notation 
+            WHERE id_student = %s AND id_activity = %s
+            """
+        self.cursor.execute(query, (id_student, id_activity))
+        self.connection.commit()
+
+    
+    def Get_Students_Notations(self, id_student : str):
+        query = """
+            SELECT * FROM notation
+            WHERE id_student = %s
+            """
+        self.cursor.execute(query, [id_student])
+        rows = self.cursor.fetchall()
+        return (tuple(Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3])) for row in rows))
+        
+    def Get_Activity_Notations(self, id_activity : str):
+        query = """
+            SELECT * FROM notation
+            WHERE id_activity = %s
+            """
+        self.cursor.execute(query, [id_activity])
+        rows = self.cursor.fetchall()
+        return (tuple(Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3])) for row in rows))
+        
     
 
 
@@ -620,5 +718,4 @@ class Database:
             return attempt
                         
 
-TEST = Database()
-TEST.Add_Ressource(TEST.Generate_ID(), 'TD1', 'pdf', '20', '3')
+
