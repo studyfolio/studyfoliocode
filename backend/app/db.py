@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from classes import *
+from .classes import *
 import secrets
 import string
 
