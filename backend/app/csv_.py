@@ -1,19 +1,19 @@
 import csv
-from db import Database
-
-def read_csv_file(file_path):
-    data = []
-    with open(file_path, 'r') as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            data.append(row)
-    return data
-
-DB = Database()
-
-def save_csv(file_path, year):
-    csv_data = read_csv_file(file_path)
-    for row in csv_data[1:]:
-        DB.Add_Student(row[0], row[1], row[2], row[3], row[4], row[5], DB.Get_Promo_ID_By_Year(year), None)
-
-
+from .db import Database
+from io import StringIO
+def add_csv(file,group_id=None):
+    db =Database()
+    file_str = file.stream.read().decode("utf-8")
+    file_obj = StringIO(file_str)
+    csv_reader = csv.DictReader(file_obj)
+    student= []
+    for row in csv_reader:
+        firstname = row["First Name"]
+        lastname = row["Last Name"]
+        email = row["Email"]
+        password = row["Password"]
+        birthday = row["Bdate"]
+        phone = row["Phone"]
+        data= db.Add_Student(firstname, lastname, email,password,birthday,phone,group_id)
+        student.append(data.to_json())
+    return student

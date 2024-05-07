@@ -191,13 +191,14 @@ class Ressource:
         }
     
 class Activity:
-    def __init__(self, id, name, description, type, drive_link, section):
+    def __init__(self, id, name, description, type, drive_link, section, end_date):
         self.id = id
         self.name = name
         self.description = description
         self.type = type
         self.drive_link = drive_link
         self.section = section
+        self.end_date = end_date
 
     def to_json(self):
         return{
@@ -206,7 +207,8 @@ class Activity:
             'description' : self.description,
             'type' : self.type,
             'drive_link' : self.drive_link,
-            'section' : self.section.to_json()
+            'section' : self.section.to_json(),
+            'end_date' : self.end_date
         }
     
 class Notation:

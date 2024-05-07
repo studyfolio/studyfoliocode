@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from classes import *
+from .classes import *
 import secrets
 import string
 
@@ -156,7 +156,7 @@ class Database:
         """                
         self.cursor.execute(query, (new_group, *students))
         self.connection.commit()
-        return self.Get_Students
+        return self.Get_Students()
 
     def Delete_Students(self, students : list):
         """
@@ -166,7 +166,7 @@ class Database:
         placeholder = ', '.join(['%s'] * len(students))
         query1 = f"""
             DELETE FROM notation 
-            WHERE id IN ({placeholder})
+            WHERE id_student IN ({placeholder})
         """
         query2 = f"""
             DELETE FROM student 
@@ -540,7 +540,7 @@ class Database:
         """
         self.cursor.execute(query, (name, id_module))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
+        self.cursor.execute("SELECT * FROM section WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
         return Section(row[0], row[1], self.Get_Module_By_ID(row[2]))
 
@@ -627,16 +627,16 @@ class Database:
         rows = self.cursor.fetchall()
         return (tuple(Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1]) for row in rows))
 
-    def Add_Activity(self,name : str, description : str, type : str, drive_link : str, id_section : str):       
+    def Add_Activity(self,name : str, description : str, type : str, drive_link : str, id_section : str, end_date : str):       
         query = """
-            INSERT INTO activity (name, description, type, drive_link, id_section)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO activity (name, description, type, drive_link, id_section, end_date)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        self.cursor.execute(query, (name, description, type, drive_link, id_section))
+        self.cursor.execute(query, (name, description, type, drive_link, id_section, end_date))
         self.connection.commit()
         self.cursor.execute("SELECT * FROM activity WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
-        return  Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]))
+        return  Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6])
     
 
     def Get_Activities(self):
@@ -645,7 +645,7 @@ class Database:
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])) for row in rows))
+        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6]) for row in rows))
     
     def Get_Activity_By_ID(self, id_activity : str):
         query = """
@@ -654,7 +654,7 @@ class Database:
             """
         self.cursor.execute(query, [id_activity])
         row = self.cursor.fetchone()
-        return(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])))
+        return(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6]))
     
 
     def Get_Section_Activities(self, id_section : str):
@@ -664,7 +664,7 @@ class Database:
             """
         self.cursor.execute(query, [id_section])
         rows = self.cursor.fetchall()
-        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5])) for row in rows))
+        return(tuple(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6]) for row in rows))
     
     def Delete_Activity(self, id_activity : str):
         query1 = """
@@ -742,7 +742,7 @@ class Database:
                 if Account.id == 1:
                     return(True, Account)
                 else:
-                    return(True, Account, Account.complete_json(self.Get_Teacher_Roles(Account.id)))
+                    return(True, Account)
             else:
                 return(False, None)
         else:
@@ -782,3 +782,5 @@ class Database:
                         
 
 
+""" TEST = Database()
+TEST.Modify_Group(['174'], '100') """
