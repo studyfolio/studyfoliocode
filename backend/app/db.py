@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from .classes import *
+from classes import *
 import secrets
 import string
 
@@ -156,7 +156,7 @@ class Database:
         """                
         self.cursor.execute(query, (new_group, *students))
         self.connection.commit()
-        return self.Get_Students()
+        return self.Get_Students
 
     def Delete_Students(self, students : list):
         """
@@ -540,7 +540,7 @@ class Database:
         """
         self.cursor.execute(query, (name, id_module))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM section WHERE id = LAST_INSERT_ID()")
+        self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
         return Section(row[0], row[1], self.Get_Module_By_ID(row[2]))
 
@@ -656,7 +656,15 @@ class Database:
         row = self.cursor.fetchone()
         return(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6]))
     
-
+    def Get_Activity_By_Section(self, id_section : str):
+        query = """
+            SELECT * FROM activity            
+            WHERE id_section = %s
+            """
+        self.cursor.execute(query, [id_section])
+        rows = self.cursor.fetchall()        
+        return(Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(str(row[5])), row[6]) for row in rows)
+    
     def Get_Section_Activities(self, id_section : str):
         query = """
             SELECT * FROM activity   
@@ -742,7 +750,7 @@ class Database:
                 if Account.id == 1:
                     return(True, Account)
                 else:
-                    return(True, Account)
+                    return(True, Account, Account.complete_json(self.Get_Teacher_Roles(Account.id)))
             else:
                 return(False, None)
         else:
@@ -782,5 +790,7 @@ class Database:
                         
 
 
-""" TEST = Database()
-TEST.Modify_Group(['174'], '100') """
+TEST = Database()
+res = TEST.Get_Promo_Modules('33')
+for r in res:
+    print(r.to_json())
