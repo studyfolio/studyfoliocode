@@ -6,7 +6,9 @@ import json
 import os
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = "app\\service_account.json"
+current_directory = os.path.dirname(os.path.abspath(__file__))
+service_account_path = os.path.join(current_directory, 'service_account.json')
+SERVICE_ACCOUNT_FILE = service_account_path
 
 
 
@@ -14,21 +16,41 @@ def authenticate():
     creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     return creds
 
+def get_mimetype(file_extension):
+    mime_types = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.rar': 'application/zip',
+        '.zip': 'application/zip',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.ppt': 'application/vnd.ms-powerpoint',
+        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        '.txt': 'text/plain',
+        '.csv': 'text/csv',
+        '.html': 'text/html',
+        '.htm': 'text/html',
+        '.json': 'application/json',
+        '.gz': 'application/gzip',
+        '.tar': 'application/x-tar',
+        '.xml': 'application/xml',
+        '.7z': 'application/x-7z-compressed'
+    }
+    return mime_types.get(file_extension.lower(), None)
+
+
 def upload_file(file, name: str, folder: str):
     creds = authenticate()  
     service = build('drive', 'v3', credentials=creds)
-
-    if file.filename.endswith('.pdf'):
-        mimetype = 'application/pdf'
-    elif file.filename.lower().endswith(('.jpg', '.jpeg')):
-        mimetype = 'image/jpeg'
-    elif file.filename.lower().endswith('.png'):
-        mimetype = 'image/png'
-    elif file.filename.lower().endswith('.gif'):
-        mimetype = 'image/gif'
-    else:
+    file_extension = os.path.splitext(file.filename)[1]
+    mimetype = get_mimetype(file_extension)
+    if mimetype is None:
         raise ValueError("Unsupported file format")
-
     file_metadata = {
         'name': name,
         'parents': [folder]
