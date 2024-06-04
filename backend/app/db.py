@@ -773,45 +773,47 @@ class Database:
         self.cursor.execute(query2, [id_activity])
         self.connection.commit()
 
-    def Give_Notation(self, id_student : str, id_activity : str, mark : str, observation : str):
+    def Add_Submission(self, id_student : str, id_activity : str, mark : str, observation : str, drive_link : str):
         query = """
-            INSERT INTO notation (mark, observation, id_student, id_activity)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO submission (mark, observation, id_student, id_activity, drive_link)
+            VALUES (%s, %s, %s, %s, %s)
             """
-        self.cursor.execute(query, (mark, observation, id_student, id_activity))
+        self.cursor.execute(query, (mark, observation, id_student, id_activity, drive_link))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM notation WHERE id_student = %s AND id_activity = %s", (id_student, id_activity))
+        self.cursor.execute("SELECT * FROM submission WHERE id_student = %s AND id_activity = %s", (id_student, id_activity))
         row = self.cursor.fetchone()
-        return Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3]))
+        return Submission(self.Get_Student_By_ID(row[0]), self.Get_Activity_By_ID(row[1]), row[2], row[3], row[4])
     
 
-    def Delete_Notaion(self, id_student : str, id_activity : str):
+    def Delete_Submission(self, id_student : str, id_activity : str):
         query = """"
-            DELETE FROM notation 
+            DELETE FROM submission 
             WHERE id_student = %s AND id_activity = %s
             """
         self.cursor.execute(query, (id_student, id_activity))
         self.connection.commit()
 
     
-    def Get_Students_Notations(self, id_student : str):
+    def Get_Students_Submissions(self, id_student : str):
         query = """
-            SELECT * FROM notation
+            SELECT * FROM submission
             WHERE id_student = %s
             """
         self.cursor.execute(query, [id_student])
         rows = self.cursor.fetchall()
-        return (tuple(Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3])) for row in rows))
-        
-    def Get_Activity_Notations(self, id_activity : str):
+        return (tuple(Submission(self.Get_Student_By_ID(row[0]), self.Get_Activity_By_ID(row[1]), row[2], row[3], row[4]) for row in rows))
+
+    def Get_Activity_Submissions(self, id_activity : str):
         query = """
-            SELECT * FROM notation
+            SELECT * FROM submission
             WHERE id_activity = %s
             """
         self.cursor.execute(query, [id_activity])
         rows = self.cursor.fetchall()
-        return (tuple(Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3])) for row in rows))
+        return (tuple(Submission(self.Get_Student_By_ID(row[0]), self.Get_Activity_By_ID(row[1]), row[2], row[3], row[4]) for row in rows))
         
+       
+    
     
     
 
@@ -874,8 +876,5 @@ class Database:
         else:
             return attempt
                         
-
-
-
 
 

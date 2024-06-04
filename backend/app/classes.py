@@ -207,17 +207,19 @@ class Activity:
             'end_date' : self.end_date
         }
     
-class Notation:
-    def __init__(self, mark, observation, student, activity):
+class Submission:
+    def __init__(self, student, activity, drive_link, mark, observation):
         self.mark = mark
         self.observation = observation
         self.student = student
         self.activity = activity
+        self.drive_link = drive_link
 
     def to_json(self):
         return{
             'mark' : self.mark,
             'observation' : self.observation,
             'student' : self.student.to_json(),
-            'activity' : self.activity.to_json()
+            'activity' : self.activity.to_json(),
+            'drive_link' : self.drive_link
         }
