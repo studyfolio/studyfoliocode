@@ -55,7 +55,7 @@ class Database:
         
 
 
-    def Add_Teacher(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str):           
+    def Add_Teacher(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, profile_pic :str):           
         query = """
                 SELECT pw FROM teacher 
                 where email = %s
@@ -66,15 +66,26 @@ class Database:
             if self.decrypt_data(row[0]) == password: 
                 return ("Already Registered")
         query = """
-                INSERT INTO teacher (fname, lname, email, pw, bdate, phone)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO teacher (fname, lname, email, pw, bdate, phone, profile_pic)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone))
+        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, profile_pic))
         self.connection.commit()
         self.cursor.execute("SELECT * FROM teacher WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
-        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6])
-        
+        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[7])
+
+    def Add_Admin(self,id : str, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, profile_pic :str):                           
+        query = """
+                INSERT INTO teacher (id, fname, lname, email, pw, bdate, phone, profile_pic)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+        self.cursor.execute(query, (id, fname, lname, email, self.encrypt_data(password), bdate, phone, profile_pic))
+        self.connection.commit()
+        self.cursor.execute("SELECT * FROM teacher WHERE id = LAST_INSERT_ID()")
+        row = self.cursor.fetchone()
+        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[7])
+       
     
 
     def Get_Teachers(self):
@@ -87,7 +98,7 @@ class Database:
             """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return tuple(Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) if row[0] != 1 else Admin(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) for row in rows)    
+        return tuple(Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6]) if row[0] != 1 else Admin(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[7]) for row in rows)    
     
 
     def Get_Teacher_By_ID(self, id_teacher):
@@ -98,7 +109,7 @@ class Database:
             """
         self.cursor.execute(query, [id_teacher])
         row = self.cursor.fetchall()[0]
-        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6])  
+        return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[7])  
 
     
     def Delete_Teachers(self, teachers : list):
@@ -125,8 +136,26 @@ class Database:
         self.connection.commit()
         return
     
+    def Modify_Teacher_Password(self, teacher_id :str, new_pass :str):        
+        query = """
+            UPDATE teacher SET pw = %s
+            WHERE id = %s
+        """
+        self.cursor.execute(query, (self.encrypt_data(new_pass), teacher_id))
+        self.connection.commit()
+        return
     
-    def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_groupe : str):                
+    def Modify_Teacher_Profile_Picture(self, teacher_id :str, new_pic :str):        
+        query = """
+            UPDATE teacher SET profile_pic = %s
+            WHERE id = %s
+        """
+        self.cursor.execute(query, (new_pic, teacher_id))
+        self.connection.commit()
+        return
+    
+    
+    def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_groupe : str, profile_pic :str):                
         query = """
                     SELECT pw FROM student 
                     where email = %s
@@ -137,13 +166,14 @@ class Database:
             if self.decrypt_data(row[0]) == password:
                 return ("Already Registered")
         query = """
-                INSERT INTO student (fname, lname, email, pw, bdate, phone, id_group)                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO student (fname, lname, email, pw, bdate, phone, id_group, profile_pic) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """
-        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_groupe))
+        self.cursor.execute(query, (fname, lname, email, self.encrypt_data(password), bdate, phone, id_groupe, profile_pic))
         self.connection.commit()
         self.cursor.execute("SELECT * FROM student WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
-        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))       
+        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[8], self.Get_Group_By_ID(row[7]))       
 
     def Modify_Group(self, students : list, new_group : str):
         """
@@ -156,7 +186,7 @@ class Database:
         """                
         self.cursor.execute(query, (new_group, *students))
         self.connection.commit()
-        return self.Get_Students
+        return self.Get_Students()
 
     def Delete_Students(self, students : list):
         """
@@ -188,7 +218,7 @@ class Database:
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         
-        return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7])) for row in rows)  
+        return tuple(Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[8], self.Get_Group_By_ID(row[7])) for row in rows)  
     
 
     def Get_Student_By_ID(self, id_student : str):        
@@ -201,6 +231,50 @@ class Database:
         
         return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))
     
+    def Modify_Student_Password(self, student_id :str, new_pass :str):        
+        query = """
+            UPDATE student SET pw = %s
+            WHERE id = %s
+        """
+        self.cursor.execute(query, (self.encrypt_data(new_pass), student_id))
+        self.connection.commit()
+        return
+    
+    def Modify_Student_Profile_Picture(self, student_id :str, new_pic :str):        
+        query = """
+            UPDATE student SET profile_pic = %s
+            WHERE id = %s
+        """
+        self.cursor.execute(query, (new_pic, student_id))
+        self.connection.commit()
+        return
+    
+
+    def Reset_Password(self, email: str, new_pass: str):
+        query = """
+            SELECT * FROM teacher
+            WHERE email = %s 
+        """
+        self.cursor.execute(query, (email,))
+        result = self.cursor.fetchone()  
+
+        if result:
+            query = """
+                UPDATE teacher SET pw = %s
+                WHERE email = %s
+            """
+        else:
+            query = """
+                UPDATE student SET pw = %s
+                WHERE email = %s
+            """
+
+        self.cursor.execute(query, (self.encrypt_data(new_pass), email))
+
+        self.connection.commit()
+
+
+
     
     def Add_Promo(self, name :str, year : str):        
 
@@ -348,6 +422,18 @@ class Database:
         row = self.cursor.fetchall()[0]
         return Module(row[0], row[1],row[2], row[3], row[4], row[5])
     
+    def Get_Module_By_Teacher(self, teacher_id):
+        query = """
+                SELECT * FROM module
+                WHERE id IN (
+                SELECT id_module FROM role 
+                WHERE id_teacher = %s
+                )
+            """
+        self.cursor.execute(query, [teacher_id])
+        rows = self.cursor.fetchall()
+        return (tuple(Module(row[0], row[1],row[2], row[3], row[4], row[5]) for row in rows))
+    
     def Delete_Module(self, id_module : str):
         query1 = """
                 DELETE FROM role 
@@ -372,7 +458,7 @@ class Database:
                          (
                             SELECT id FROM section
                             WHERE id_module = %s
-                         ) 
+                         ) ressource
                         )   
             """
         query5 = """
@@ -540,7 +626,7 @@ class Database:
         """
         self.cursor.execute(query, (name, id_module))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM ressource WHERE id = LAST_INSERT_ID()")
+        self.cursor.execute("SELECT * FROM section WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
         return Section(row[0], row[1], self.Get_Module_By_ID(row[2]))
 
@@ -625,7 +711,7 @@ class Database:
             """
         self.cursor.execute(query, [id_section])
         rows = self.cursor.fetchall()
-        return (tuple(Ressource(row[0], row[2], self.Get_Teacher_By_ID(row[4]), self.Get_Section_By_ID(row[3]), row[1]) for row in rows))
+        return (tuple(Ressource(row[0], row[1], row[2], row[3], row[4], self.Get_Teacher_By_ID(row[5]), self.Get_Section_By_ID(row[6])) for row in rows))
 
     def Add_Activity(self,name : str, description : str, type : str, drive_link : str, id_section : str, end_date : str):       
         query = """
@@ -727,7 +813,7 @@ class Database:
         return (tuple(Notation(row[0], row[1], self.Get_Student_By_ID(row[2]), self.Get_Activity_By_ID(row[3])) for row in rows))
         
     
-
+    
 
     
     def Authentificate_TA(self, email : str, password: str):        
@@ -790,7 +876,6 @@ class Database:
                         
 
 
-TEST = Database()
-res = TEST.Get_Promo_Modules('33')
-for r in res:
-    print(r.to_json())
+
+
+

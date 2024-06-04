@@ -1,6 +1,6 @@
 
 class Account:
-    def __init__(self, id, fname, lname, email, pw, bdate, phone):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
         self.id = id
         self.fname = fname
         self.lname = lname
@@ -8,17 +8,15 @@ class Account:
         self.password = pw
         self.bdate = bdate
         self.phone = phone
+        self.profile_pic = profile_pic
 
     def verify_pw(self, pw):
         return (pw == self.password)
 
 class Teacher(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone):
-        super().__init__(id, fname, lname, email, pw, bdate, phone)
-
-    def __repr__(self) -> str:
-        return('TEACHER || ID : '+str(self.id) + ' Name : '+self.fname+' '+self.lname+' Email : '+self.email+" "+self.password)
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
+        super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
     
     def to_json(self):
         return{
@@ -28,7 +26,8 @@ class Teacher(Account):
             'lname' : self.lname,
             'email' : self.email,
             'bdate' : str(self.bdate),
-            'phone' : self.phone,            
+            'phone' : self.phone,  
+            'profile_picture' : self.profile_pic
         }
 
     def complete_json(self, roles):
@@ -36,12 +35,9 @@ class Teacher(Account):
     
 class Admin(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone):
-        super().__init__(id, fname, lname, email, pw, bdate, phone)
-
-    def __repr__(self) -> str:
-        return('ADMIN || ID : '+str(self.id) + ' Name : '+self.fname+' '+self.lname+' Email : '+self.email+' '+self.password)
-
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
+        super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
+    
     def to_json(self):
         return{
             'state' : 'admin',
@@ -51,7 +47,9 @@ class Admin(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone,            
+            'profile_picture' : self.profile_pic
         }
+    
     
 
 class Group:
@@ -87,12 +85,9 @@ class Promo:
 
 class Student(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, group = None):
-        super().__init__(id, fname, lname, email, pw, bdate, phone)
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic, group = None):
+        super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
         self.group = group
-
-    def __repr__(self) -> str:
-        return('Student || ID : '+str(self.id) + ' Name : '+self.fname+' '+self.lname+' Email : '+self.email+" "+self.password)
     
     def to_json(self):
         return{
@@ -103,7 +98,8 @@ class Student(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone, 
-            'group' : None if self.group is None else self.group.to_json()
+            'group' : None if self.group is None else self.group.to_json(),
+            'profile_picture' : self.profile_pic
         }
     
 class Module:
