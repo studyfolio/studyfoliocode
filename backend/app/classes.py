@@ -1,6 +1,6 @@
 
 class Account:
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic=None):
         self.id = id
         self.fname = fname
         self.lname = lname
@@ -15,7 +15,7 @@ class Account:
 
 class Teacher(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic=None):
         super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
     
     def to_json(self):
@@ -27,7 +27,7 @@ class Teacher(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone,  
-            'profile_picture' : self.profile_pic
+            'profile_pic' : self.profile_pic
         }
 
     def complete_json(self, roles):
@@ -35,7 +35,7 @@ class Teacher(Account):
     
 class Admin(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic=None):
         super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
     
     def to_json(self):
@@ -47,7 +47,7 @@ class Admin(Account):
             'email' : self.email,
             'bdate' : str(self.bdate),
             'phone' : self.phone,            
-            'profile_picture' : self.profile_pic
+            'profile_pic' : self.profile_pic
         }
     
     
@@ -85,7 +85,7 @@ class Promo:
 
 class Student(Account):
 
-    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic, group = None):
+    def __init__(self, id, fname, lname, email, pw, bdate, phone, profile_pic=None, group = None):
         super().__init__(id, fname, lname, email, pw, bdate, phone, profile_pic)
         self.group = group
     
@@ -99,7 +99,7 @@ class Student(Account):
             'bdate' : str(self.bdate),
             'phone' : self.phone, 
             'group' : None if self.group is None else self.group.to_json(),
-            'profile_picture' : self.profile_pic
+            'profile_pic' : self.profile_pic
         }
     
 class Module:
