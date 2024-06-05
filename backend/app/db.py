@@ -152,7 +152,7 @@ class Database:
         """
         self.cursor.execute(query, (new_pic, teacher_id))
         self.connection.commit()
-        return
+        return self.Get_Teacher_By_ID(teacher_id)
     
     
     def Add_Student(self, fname :str, lname :str, email :str, password :str , bdate :str, phone :str, id_groupe : str, profile_pic :str):                
@@ -247,7 +247,7 @@ class Database:
         """
         self.cursor.execute(query, (new_pic, student_id))
         self.connection.commit()
-        return
+        return self.Get_Student_By_ID(student_id)
     
 
     def Reset_Password(self, email: str, new_pass: str):
