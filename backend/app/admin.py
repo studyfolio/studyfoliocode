@@ -2,6 +2,7 @@ from flask import request, Blueprint, jsonify
 from .db import Database
 from .csv_ import add_csv
 from .cloud import upload_file
+from .utils import generate_code,send_email
 
 admin = Blueprint('admin', __name__)
 
@@ -17,10 +18,35 @@ def add_teacher():
         phone= data.get('phone')
         try:
             db = Database()            
-            data=db.Add_Teacher(firstname, lastname,email, password,birthday,phone)
+            data=db.Add_Teacher(firstname, lastname,email, password,birthday,phone,None)
             if isinstance(data,str):
                 return jsonify({'message': data}), 400
             else:
+                subject="StudyFolio Account"
+                html = f"""
+    <html>
+    <head>
+
+    </head>
+    <body>
+        <div class="content">
+            <div class="header">
+                <h1>StudyFolio Account Information</h1>
+            </div>
+            
+            <div style="font-size:20px;">
+            <h4>Hello,</h4>
+            <h5>Email :<b>{email}</b></h5>
+            <h5>Password :<b>{password}</b></h5>
+            </div>
+            <div class="footer">
+                <p>&copy; 2024 study folio</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+                send_email(subject,message='',to_email=email,html=html)
                 return  jsonify({'message': 'teacher added successfully','teacher':data.to_json()}), 200
         except Exception as e:
             return jsonify({'message': 'An unexpected error occurred','details': str(e)}), 500
@@ -49,10 +75,35 @@ def add_student():
     group_id= data.get('group_id')
     try:
         db = Database()            
-        data=db.Add_Student(firstname, lastname,email, password,birthday,phone,group_id)
+        data=db.Add_Student(firstname, lastname,email, password,birthday,phone,group_id,None)
         if isinstance(data,str):
             return jsonify({'message': data}), 400
         else:
+            subject="StudyFolio Account"
+            html = f"""
+    <html>
+    <head>
+
+    </head>
+    <body>
+        <div class="content">
+            <div class="header">
+                <h1>StudyFolio Account Information</h1>
+            </div>
+            
+            <div style="font-size:20px;">
+            <h4>Hello,</h4>
+            <h5>Email :<b>{email}</b></h5>
+            <h5>Password :<b>{password}</b></h5>
+            </div>
+            <div class="footer">
+                <p>&copy; 2024 study folio</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+            send_email(subject,message='',to_email=email,html=html)
             return  jsonify({'message': 'student added successfully','student':data.to_json()}), 200
     except Exception as e:
         return jsonify({'message': 'An unexpected error occurred'}), 500
@@ -60,7 +111,7 @@ def add_student():
 @admin.route('/add_student_csv', methods=['POST'])
 def upload_csv():
     file = request.files['file']
-    group_id = request.form.get('group_id')
+    group_id = request.form.get('group_id',None)
     if file and file.filename.endswith('.csv'):
         try:
             data = add_csv(file,group_id)

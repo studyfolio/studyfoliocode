@@ -1,25 +1,17 @@
-from itsdangerous import URLSafeTimedSerializer
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import config 
+import random
+import string
+import config
 
-SECRET_KEY = config.SECRET_KEY
+def generate_code(length=6):
+    characters = string.digits + string.digits
+    code = ''.join(random.choice(characters) for _ in range(length))
+    return code
 
-serializer = URLSafeTimedSerializer(SECRET_KEY)
 
-def generate_reset_token(user_id):
-    return serializer.dumps(user_id)
-
-def verify_reset_token(token, expiration=3600):
-    try:
-        user_id = serializer.loads(token, max_age=expiration)
-        return user_id
-    except Exception as e:
-        return None
-    
-
-def send_email(subject, message, to_email):
+def send_email(subject, message, to_email,html):
     from_email = config.MAIL_USERNAME
     smtp_server = config.MAIL_SERVER
     smtp_port = config.MAIL_PORT
@@ -30,8 +22,10 @@ def send_email(subject, message, to_email):
     msg['From'] = from_email
     msg['To'] = to_email
     msg['Subject'] = subject
+    
 
     msg.attach(MIMEText(message, 'plain'))
+    msg.attach(MIMEText(html,'html'))
 
     try:
         server = smtplib.SMTP(smtp_server, smtp_port)
