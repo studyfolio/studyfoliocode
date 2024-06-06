@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_mail import Mail
 import config
 
+
 def create_app():
     app=Flask(__name__)
     app.config['SECRET_KEY']= config.SECRET_KEY
@@ -21,5 +22,7 @@ def create_app():
     app.register_blueprint(promos_api,url_prefix="/")
     from .teacher import teacher
     app.register_blueprint(teacher,url_prefix="/")
+    from .student import student
+    app.register_blueprint(student,url_prefix="/")
     return app
 

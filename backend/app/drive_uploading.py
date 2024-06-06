@@ -78,32 +78,43 @@ def upload_image(file, name : str):
 def upload_ressource(file, name : str):
     return upload_file(file, name, "1YbY2WkCgfvOltgIdmwiRwN_v-oGBfagP")
 
+
+
 def upload_json(json_data, name: str):
-    creds = authenticate()  
+    creds = authenticate()
     service = build('drive', 'v3', credentials=creds)
     
     file_metadata = {
         'name': name,
-        'parents': ["1Es2NprUtHTzYIwnmbCkBYGEgxxqiKRMi"]
+        'parents': ["1Es2NprUtHTzYIwnmbCkBYGEgxxqiKRMi"]  # Ensure this ID is correct and accessible
     }
     
     json_bytes = json.dumps(json_data).encode('utf-8')
     
-    media_body = MediaIoBaseUpload(io.BytesIO(json_bytes), 'application/json', resumable=True)
+    media_body = MediaIoBaseUpload(io.BytesIO(json_bytes), mimetype='application/json', resumable=True)
     uploaded_file = service.files().create(
         body=file_metadata,
         media_body=media_body,
         fields='webViewLink, id'
     ).execute()
-
+    
+    if not uploaded_file:
+        raise Exception("Failed to upload the file.")
+    
     file_id = uploaded_file.get('id')
     webViewLink = uploaded_file.get('webViewLink')
+    
+    # Make the file publicly accessible
+    permission = {
+        'type': 'anyone',
+        'role': 'reader',
+    }
+    
     service.permissions().create(
         fileId=file_id,
-        body={'role': 'reader', 'type': 'anyone'},
+        body=permission,
         fields='id'
     ).execute()
-    
 
     return webViewLink
 
@@ -127,5 +138,4 @@ def download_json(file_link):
     json_data = json.loads(downloaded_file.read().decode('utf-8'))
 
     return json_data
-
 

@@ -80,7 +80,7 @@ def add_quizz():
     name =data.get('name')
     type ="quizz"
     id_module = str(data.get('id_module'))
-    quiz_json =data.get("quizz") 
+    quiz_json =data.get("quizzes") 
     quizz_link=upload_json(quiz_json,name)
     section_name = data.get('section_name')
     id_section =data.get('id_section')
@@ -193,6 +193,7 @@ def get_activity():
         else:
             return jsonify({"data":Activtity.to_json(),"type":"test"}),200
     except Exception as e:
+        print(str(e))
         return jsonify({"error":str(e)}),500
     
 @teacher.route("/change_teacher_profile",methods=["POST"])

@@ -551,7 +551,7 @@ class Database:
             """
         self.cursor.execute(query, (id_teacher, id_module, charge))
         self.connection.commit()
-        return
+        return self.Get_Roles()
 
      
         

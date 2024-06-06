@@ -6,7 +6,7 @@ def add_csv(file,group_id=None):
     file_str = file.stream.read().decode("utf-8")
     file_obj = StringIO(file_str)
     csv_reader = csv.DictReader(file_obj)
-    student= []
+    student= []   
     for row in csv_reader:
         firstname = row["First Name"]
         lastname = row["Last Name"]
@@ -14,6 +14,6 @@ def add_csv(file,group_id=None):
         password = row["Password"]
         birthday = row["Bdate"]
         phone = row["Phone"]
-        data= db.Add_Student(firstname, lastname, email,password,birthday,phone,group_id)
+        data= db.Add_Student(firstname, lastname, email,password,birthday,phone,None,None)
         student.append(data.to_json())
     return student
