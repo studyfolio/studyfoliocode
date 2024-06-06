@@ -1,11 +1,11 @@
 from flask import request, Blueprint, jsonify
 from .db import Database
 from .cloud import upload_file
-from .drive_uploading import upload_ressource,upload_json
+from .drive_uploading import upload_ressource,upload_json,download_json
 from datetime import datetime, timedelta
 import json
 
-end_data = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+end_data = (datetime.now() + timedelta(days=10)).strftime('%Y-%m-%d')
 teacher=Blueprint("teacher",__name__)
 
 @teacher.route('/add_resource', methods=['POST'])
@@ -73,15 +73,29 @@ def add_test():
     except Exception as e:
         return jsonify({"error":str(e)}),500
     
+
 @teacher.route("/add_quizz",methods=["POST"])
 def add_quizz():
+    data =request.json
+    name =data.get('name')
+    type ="quizz"
+    id_module = str(data.get('id_module'))
+    quiz_json =data.get("quizz") 
+    quizz_link=upload_json(quiz_json,name)
+    section_name = data.get('section_name')
+    id_section =data.get('id_section')
     try:
-        file =request.json
-        link=upload_json(file,"fsfr")
-        return jsonify({"link":link}),200
-
+        if id_section == "null" or id_section is None:
+            db =Database()
+            section=db.Add_Section(section_name,id_module)
+            Activity=db.Add_Activity(name,None,type,quizz_link,section.id,end_data)
+            return jsonify({"message":"quizz added succesfuly","data":Activity.to_json(),"section":section.to_json()}),200
+        else:
+            db=Database()
+            Activity=db.Add_Activity(name,None,type,quizz_link,id_section,end_data)
+            return jsonify({"message":"quizz added succesfuly","data":Activity.to_json()}),200
     except Exception as e:
-        return jsonify({'error': str(e)}),500
+        return jsonify({"error":str(e)}),500
         
         
     
@@ -141,4 +155,80 @@ def get_activities():
         return activity,200
     except Exception as e :
         return jsonify({"error":str(e)}),500
+
+@teacher.route("/delete_resource",methods=["POST"])
+def delete_resource():
+    try:
+        data = request.get_json()
+        resources = data.get('id')
+        db=Database()
+        db.Delete_Ressource([resources])
+        return jsonify({'message': 'Resources deleted successfully'}), 200
+    except Exception as e :
+        return jsonify({"error":str(e)}),500
     
+@teacher.route("/delete_activity",methods=["POST"])
+def delete_activity():
+    try:
+        data = request.get_json()
+        activity = data.get('id')
+        db=Database()
+        name= db.Get_Activity_By_ID(activity).name
+        db.Delete_Activity(activity)
+        return jsonify({'message': f'{name} deleted successfully'}), 200
+    except Exception as e :
+        return jsonify({"error":str(e)}),500
+    
+@teacher.route("/get_activity",methods=["POST"])
+def get_activity():
+    try:
+        data = request.get_json()
+        activity = data.get('id')
+        db = Database()
+        Activtity=db.Get_Activity_By_ID(activity)
+        if Activtity.type =="quizz":
+            driveLink= Activtity.drive_link
+            json = download_json(driveLink)
+            return jsonify({'data':json,'type':"quizz"}),200
+        else:
+            return jsonify({"data":Activtity.to_json(),"type":"test"}),200
+    except Exception as e:
+        return jsonify({"error":str(e)}),500
+    
+@teacher.route("/change_teacher_profile",methods=["POST"])
+def change_teacher_profile():
+    try:
+        db=Database()
+        teacher_id= request.form.get("teacher_id")
+        picture_File=request.files['file']
+        secure_url = upload_file(picture_File)
+        db.Modify_Teacher_Profile_Picture(teacher_id,secure_url)
+        return jsonify(secure_url),200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":str(e)}),500
+    
+@teacher.route("/get_submissions",methods=["POST"])
+def get_submissions():
+    try:
+        db=Database()
+        activity=  request.get_json()
+        activity_id= activity.get("activity_id")
+        data = [act.to_json() for act in db.Get_Activity_Submissions(activity_id)]
+
+        return jsonify(data),200
+    except Exception as e:
+        return jsonify({"error":str(e)}),500
+
+@teacher.route("/get_module_by_teacher",methods=["POST"])
+def Get_Module_By_Teacher():
+    try:
+        db=Database()
+        activity=  request.get_json()
+        teacher_id= activity.get("teacher_id")
+        data = [module.to_json() for module in db.Get_Module_By_Teacher(teacher_id)]
+
+        return jsonify(data),200
+    except Exception as e:
+        return jsonify({"error":str(e)}),500
+

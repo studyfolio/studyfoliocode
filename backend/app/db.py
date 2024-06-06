@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv, dotenv_values
 import mysql.connector
 from cryptography.fernet import Fernet
-from classes import *
+from .classes import *
 import secrets
 import string
 
@@ -82,8 +82,9 @@ class Database:
             """
         self.cursor.execute(query, (id, fname, lname, email, self.encrypt_data(password), bdate, phone, profile_pic))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM teacher WHERE id = LAST_INSERT_ID()")
-        row = self.cursor.fetchone()
+        self.cursor.execute("SELECT * FROM teacher WHERE id = (SELECT MAX(id) FROM teacher)")
+        row = self.cursor.fetchone()   
+        print(row)     
         return Teacher(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[7])
        
     
@@ -195,7 +196,7 @@ class Database:
         students.remove('1') if '1' in students else None
         placeholder = ', '.join(['%s'] * len(students))
         query1 = f"""
-            DELETE FROM notation 
+            DELETE FROM submission         
             WHERE id_student IN ({placeholder})
         """
         query2 = f"""
@@ -229,7 +230,7 @@ class Database:
         self.cursor.execute(query, [id_student])
         row = self.cursor.fetchone()
         
-        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], self.Get_Group_By_ID(row[7]))
+        return Student(row[0], row[1], row[2],row[3],self.decrypt_data(row[4]),row[5],row[6], row[8],self.Get_Group_By_ID(row[7]))
     
     def Modify_Student_Password(self, student_id :str, new_pass :str):        
         query = """
@@ -273,7 +274,7 @@ class Database:
 
         self.connection.commit()
 
-
+    
 
     
     def Add_Promo(self, name :str, year : str):        
@@ -284,7 +285,7 @@ class Database:
             """
         self.cursor.execute(query, (name, year))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM promo WHERE id_promo = LAST_INSERT_ID()")
+        self.cursor.execute("SELECT * FROM promo WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
         return Promo(row[0], row[1], row[2])
     
@@ -296,7 +297,7 @@ class Database:
             """
         self.cursor.execute(query, (number, id_promo))
         self.connection.commit()
-        self.cursor.execute("SELECT * FROM groupe WHERE id_group = LAST_INSERT_ID()")
+        self.cursor.execute("SELECT * FROM groupe WHERE id = LAST_INSERT_ID()")
         row = self.cursor.fetchone()
         return Group(row[0], row[1], self.Get_Promo_By_ID(row[2]))
     
@@ -312,13 +313,16 @@ class Database:
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         return tuple(Promo(row[0], row[1], row[2]) for row in rows)  
+
+    def Get_Teacher_Count(self, promo_id):
+        pass    
     
     def Get_Promo_By_ID(self, id):
         """
         returns selected promo by id
         """
         query = """
-                SELECT * FROM promo WHERE id_promo = %s
+                SELECT * FROM promo WHERE id = %s
             """
         self.cursor.execute(query, [str(id)])
         rows = self.cursor.fetchall()
@@ -331,7 +335,7 @@ class Database:
         returns selected promo id by year
         """
         query = """
-                SELECT id_promo FROM promo WHERE promo_year = %s
+                SELECT id FROM promo WHERE promo_year = %s
             """
         self.cursor.execute(query, [str(year)])
         row = self.cursor.fetchall()
@@ -342,7 +346,7 @@ class Database:
         query1 = """
                 DELETE from student
                 WHERE id_group IN (
-                    SELECT id_group from groupe
+                    SELECT id from groupe
                         WHERE id_promo = %s
                 )                
             """        
@@ -356,7 +360,7 @@ class Database:
             """
         query4 = """
                 DELETE from promo 
-                WHERE id_promo = %s
+                WHERE id = %s
             """
         
         self.cursor.execute(query1, [id_promo])
@@ -384,7 +388,7 @@ class Database:
         returns selected promo by id
         """
         query = """
-                SELECT * FROM groupe WHERE id_group = %s
+                SELECT * FROM groupe WHERE id = %s
             """
         self.cursor.execute(query, [str(id)])
         rows = self.cursor.fetchall()
@@ -451,7 +455,7 @@ class Database:
                         )   
             """
         query4 = """
-                DELETE FROM notation                 
+                DELETE FROM submission                 
                 WHERE id_activity IN 
                     ( SELECT id FROM activity
                         WHERE id_section IN
@@ -638,7 +642,7 @@ class Database:
             WHERE id_section IN ({placeholder})
             """
         query2 = f"""
-            DELETE FROM notation 
+            DELETE FROM submission 
             WHERE id_activity IN
              (
                 SELECT id FROM activity
@@ -724,6 +728,79 @@ class Database:
         row = self.cursor.fetchone()
         return  Activity(row[0], row[1], row[2], row[3], row[4], self.Get_Section_By_ID(row[5]), row[6])
     
+    def Get_Teacher_Count(self, promo_id : str):
+        query = """
+            SELECT COUNT(*) FROM teacher
+            WHERE id IN (
+                SELECT id_teacher FROM role 
+                WHERE id_module IN (                
+                    SELECT id_module FROM study
+                    WHERE id_promo = %s
+                )
+            )
+        """   
+        self.cursor.execute(query, [promo_id])    
+        result = self.cursor.fetchall()
+        return result[0][0]
+    
+
+    def Get_Courses_Count(self, promo_id : str):
+        query = """
+            SELECT COUNT(*) FROM ressource
+            WHERE type = 'COURS' AND id_section IN (
+                SELECT id FROM section
+                WHERE id_module IN (
+                    SELECT id_module FROM study
+                    WHERE id_promo = %s
+                )
+            )
+        """
+        self.cursor.execute(query, [promo_id])    
+        result = self.cursor.fetchall()
+        return result[0][0]
+    
+    def Get_TDs_TPs_Count(self, promo_id : str):
+        query = """
+            SELECT COUNT(*) FROM ressource
+            WHERE type = 'TD/TP' AND id_section IN (
+                SELECT id FROM section
+                WHERE id_module IN (
+                    SELECT id_module FROM study
+                    WHERE id_promo = %s
+                )
+            )
+        """
+        self.cursor.execute(query, [promo_id])    
+        result = self.cursor.fetchall()
+        return result[0][0]
+    
+    def Get_Activities_Count(self, promo_id : str):
+        query = """
+            SELECT COUNT(*) FROM activity
+            WHERE id_section IN (
+                SELECT id FROM section
+                WHERE id_module IN (
+                    SELECT id_module FROM study
+                    WHERE id_promo = %s
+                )
+            )
+        """
+        self.cursor.execute(query, [promo_id])    
+        result = self.cursor.fetchall()
+        return result[0][0]
+    def Get_Promo_Stats(self):
+        result = []
+        promos = self.Get_Promos()
+        for promo in promos:
+            result.append({
+                'promo_name' : promo.name,
+                'Cours_Count' : self.Get_Courses_Count(promo.id),
+                'TD/TP_Count' : self.Get_TDs_TPs_Count(promo.id),
+                'Teacher_Count' : self.Get_Teacher_Count(promo.id),
+                'Activity_Count' : self.Get_Activities_Count(promo.id)
+            })
+
+        return result
 
     def Get_Activities(self):
         query = """
@@ -762,7 +839,7 @@ class Database:
     
     def Delete_Activity(self, id_activity : str):
         query1 = """
-            DELETE FROM notation 
+            DELETE FROM submission 
             WHERE id_activity = %s
             """
         query2 = """
@@ -838,7 +915,7 @@ class Database:
                 if Account.id == 1:
                     return(True, Account)
                 else:
-                    return(True, Account, Account.complete_json(self.Get_Teacher_Roles(Account.id)))
+                    return(True, Account)
             else:
                 return(False, None)
         else:
@@ -877,7 +954,3 @@ class Database:
             return attempt
                         
 
-D = Database()
-res = D.Authentificate('n.mahammed@esi-sba.dz', 'gaygay')
-if res[0]:
-    print(res[1].to_json())
